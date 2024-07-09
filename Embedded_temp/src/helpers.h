@@ -17,6 +17,7 @@
 #define BUZZER        9
 #define LED1          10
 #define LED2          11
+#define LED3          12
 #define WIRE          Wire
 #define MAX_VALUE     32.5
 #define LOGFREQ       5000
@@ -28,6 +29,7 @@ char data[256];
 String fileName = "log.txt";
 unsigned long currentTime;
 unsigned long lastLog=0;
+bool sdFail = false;
 const char outputFormat[] =
     R"""(Temp1: %f, Temp2: %f, Humidity: %f, Avg: %f, Time Stamp: %lu
 )""";
@@ -48,10 +50,14 @@ void checkData(float tKY, float tMPU){
         delay(1000);    
         digitalWrite(LED2,LOW);
     }
+    if(sdFail==true){
+        digitalWrite(LED3,HIGH);
+    }
 
     if(tKY >= MAX_VALUE | tMPU >=MAX_VALUE){
         digitalWrite(LED1,HIGH);
         digitalWrite(LED2,HIGH);
+        digitalWrite(LED3,HIGH);
         digitalWrite(BUZZER,HIGH);
 
         delay(1000);
@@ -60,7 +66,22 @@ void checkData(float tKY, float tMPU){
     else{
         digitalWrite(LED1,LOW);
         digitalWrite(LED2,LOW);
+        digitalWrite(LED3,HIGH);
         digitalWrite(BUZZER,LOW);
     }
 }
+
+void logData(char data[]) {
+    File logFile = SD.open(fileName, FILE_WRITE);
+    if (logFile) {
+        logFile.println(data);
+        logFile.close();
+        digitalWrite(LED3,LOW);
+    } 
+    else {
+        Serial.println("Error opening log.txt");
+        digitalWrite(LED3,HIGH);
+    }
+}
+    
 #endif HELPERS_H

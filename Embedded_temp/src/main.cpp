@@ -3,10 +3,13 @@
 void setup(){
   WIRE.begin();
   Serial.begin(115200);
-  SD.begin(CS);
   mpu.readFail=false;
   mpu.pwr_setup();
-
+  if(!SD.begin(CS)){
+    sdFail = true;
+  }
+  lcd.init();
+  lcd.backlight();
   delay(1000);    
 }
 
@@ -20,6 +23,13 @@ void loop(){
 
   checkData(temperatureKY,temperatureMPU);
   
+  //display 
+    lcd.clear(); 
+    lcd.setCursor(0, 0);
+    lcd.printf("T1: %.1fC, T2: %.1fC", round(temperatureKY * 10) / 10, round(temperatureMPU * 10) / 10);
+    lcd.setCursor(0,1);
+    lcd.printf("Humidity: %.2f %", round(humidityKY*100)/100);
+ 
   //logging
   currentTime = millis();
   sprintf(
@@ -31,12 +41,3 @@ void loop(){
   }
 }
 
-void logData(char data[]) {
-  File logFile = SD.open(fileName, FILE_WRITE);
-  if (logFile) {
-    logFile.println(data);
-    logFile.close();
-  } else {
-    Serial.println("Error opening log.txt");
-  }
-}
